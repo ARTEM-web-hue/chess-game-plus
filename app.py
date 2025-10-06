@@ -35,19 +35,24 @@ def register():
         password = request.form['password']
         username = request.form['username']
         
-        response = supabase.create_user(email, password, username)
-        if response and response.user:
-            # Создаем профиль
-            supabase.create_profile(response.user.id, username)
-            session['user'] = {
-                'id': response.user.id,
-                'email': response.user.email,
-                'username': username
-            }
-            return redirect(url_for('dashboard'))
+        try:
+            response = supabase.create_user(email, password, username)
+            if response and response.user:
+                # Создаем профиль
+                supabase.create_profile(response.user.id, username)
+                session['user'] = {
+                    'id': response.user.id,
+                    'email': response.user.email,
+                    'username': username
+                }
+                return redirect(url_for('dashboard'))
+            else:
+                flash('Ошибка регистрации', 'error')
+        except Exception as e:
+            flash(f'Ошибка подключения к базе данных: {str(e)}', 'error')
+            print(f"Registration error: {e}")
     
     return render_template('register.html')
-
 @app.route('/dashboard')
 def dashboard():
     if 'user' not in session:
