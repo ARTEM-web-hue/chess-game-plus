@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
 from supabase_client import supabase
 import chess
 import json
@@ -17,14 +17,20 @@ def login():
         email = request.form['email']
         password = request.form['password']
         
-        response = supabase.login_user(email, password)
-        if response and response.user:
-            session['user'] = {
-                'id': response.user.id,
-                'email': response.user.email,
-                'username': response.user.user_metadata.get('username', '')
-            }
-            return redirect(url_for('dashboard'))
+        try:
+            response = supabase.login_user(email, password)
+            if response and response.user:
+                session['user'] = {
+                    'id': response.user.id,
+                    'email': response.user.email,
+                    'username': response.user.user_metadata.get('username', '')
+                }
+                return redirect(url_for('dashboard'))
+            else:
+                flash('Неверный email или пароль', 'error')
+        except Exception as e:
+            flash('Ошибка подключения к серверу', 'error')
+            print(f"Login error: {e}")
     
     return render_template('login.html')
 
@@ -45,92 +51,91 @@ def register():
                     'email': response.user.email,
                     'username': username
                 }
+                flash('Регистрация успешна!', 'success')
                 return redirect(url_for('dashboard'))
             else:
                 flash('Ошибка регистрации', 'error')
         except Exception as e:
-            flash(f'Ошибка подключения к базе данных: {str(e)}', 'error')
+            flash('Ошибка подключения к серверу. Попробуйте позже.', 'error')
             print(f"Registration error: {e}")
     
     return render_template('register.html')
+
+@app.route('/logout')
+def logout():
+    session.pop('user', None)
+    flash('Вы вышли из системы', 'success')
+    return redirect(url_for('index'))
+
 @app.route('/dashboard')
 def dashboard():
     if 'user' not in session:
         return redirect(url_for('login'))
     
-    user_stats = supabase.get_user_stats(session['user']['id'])
-    user_games = supabase.get_user_games(session['user']['id'])
-    achievements = supabase.get_user_achievements(session['user']['id'])
+    # Временные данные для теста
+    user_stats = {
+        'wins': 0,
+        'losses': 0, 
+        'draws': 0,
+        'rating': 1200,
+        'games_played': 0
+    }
     
     return render_template('dashboard.html', 
                          user=session['user'],
-                         stats=user_stats.data[0] if user_stats.data else None,
-                         games=user_games.data,
-                         achievements=achievements.data)
+                         stats=user_stats,
+                         games=[],
+                         achievements=[])
 
 @app.route('/play')
 def play():
     if 'user' not in session:
         return redirect(url_for('login'))
-    return render_template('game.html', user=session['user'])
+    
+    # Временная страница игры
+    return """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Шахматная игра</title>
+        <style>
+            body { 
+                font-family: Arial, sans-serif; 
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                text-align: center;
+                padding: 50px;
+            }
+            .game-container {
+                background: rgba(255,255,255,0.1);
+                padding: 30px;
+                border-radius: 20px;
+                backdrop-filter: blur(10px);
+            }
+        </style>
+    </head>
+    <body>
+        <div class="game-container">
+            <h1>🎯 Шахматная игра</h1>
+            <p>Игровой модуль в разработке...</p>
+            <p>Скоро здесь будет полноценная шахматная доска!</p>
+            <a href="/dashboard" style="color: #f39c12;">Вернуться в дашборд</a>
+        </div>
+    </body>
+    </html>
+    """
 
+# Временные API методы для теста
 @app.route('/api/create_game', methods=['POST'])
 def create_game():
     if 'user' not in session:
         return jsonify({'error': 'Not authenticated'}), 401
     
-    user_id = session['user']['id']
-    # Пока создаем игру с самим собой для теста
-    response = supabase.create_game(user_id, user_id)
-    return jsonify({'game_id': response.data[0]['id']})
-@app.route('/logout')
-def logout():
-    session.pop('user', None)
-    return redirect(url_for('index'))
+    return jsonify({'game_id': 'temp-game', 'message': 'Game system in development'})
+
 @app.route('/api/make_move', methods=['POST'])
 def make_move():
-    if 'user' not in session:
-        return jsonify({'error': 'Not authenticated'}), 401
-    
-    data = request.json
-    game_id = data['game_id']
-    move = data['move']
-    
-    # Получаем текущую игру
-    game_response = supabase.get_game(game_id)
-    if not game_response.data:
-        return jsonify({'error': 'Game not found'}), 404
-    
-    game = game_response.data[0]
-    board = chess.Board(game['fen'])
-    
-    # Пробуем сделать ход
-    try:
-        chess_move = board.parse_san(move)
-        if chess_move in board.legal_moves:
-            board.push(chess_move)
-            
-            # Обновляем игру
-            moves = json.loads(game['moves'] or '[]')
-            moves.append(move)
-            
-            supabase.update_game(
-                game_id, 
-                board.fen(), 
-                moves,
-                'finished' if board.is_game_over() else 'active',
-                session['user']['id'] if board.is_checkmate() else None
-            )
-            
-            return jsonify({
-                'fen': board.fen(),
-                'is_checkmate': board.is_checkmate(),
-                'is_draw': board.is_game_over() and not board.is_checkmate()
-            })
-        else:
-            return jsonify({'error': 'Illegal move'}), 400
-    except ValueError:
-        return jsonify({'error': 'Invalid move'}), 400
+    return jsonify({'message': 'Game system in development'})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
