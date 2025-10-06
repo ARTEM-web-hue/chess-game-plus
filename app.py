@@ -78,7 +78,10 @@ def create_game():
     # Пока создаем игру с самим собой для теста
     response = supabase.create_game(user_id, user_id)
     return jsonify({'game_id': response.data[0]['id']})
-
+@app.route('/logout')
+def logout():
+    session.pop('user', None)
+    return redirect(url_for('index'))
 @app.route('/api/make_move', methods=['POST'])
 def make_move():
     if 'user' not in session:
