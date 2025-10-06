@@ -66,7 +66,18 @@ def logout():
     session.pop('user', None)
     flash('Вы вышли из системы', 'success')
     return redirect(url_for('index'))
-
+@app.route('/debug')
+def debug():
+    """Диагностика подключения"""
+    import os
+    info = {
+        'supabase_url': os.environ.get('SUPABASE_URL'),
+        'supabase_key_length': len(os.environ.get('SUPABASE_KEY', '')) if os.environ.get('SUPABASE_KEY') else 0,
+        'config_url': Config.SUPABASE_URL,
+        'config_key_length': len(Config.SUPABASE_KEY) if Config.SUPABASE_KEY else 0,
+        'message': 'Supabase connected successfully!'
+    }
+    return jsonify(info)
 @app.route('/dashboard')
 def dashboard():
     if 'user' not in session:
