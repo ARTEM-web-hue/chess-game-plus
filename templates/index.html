@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="hero" style="text-align: center; padding: 4rem 2rem; background: rgba(0,0,0,0.3); border-radius: 20px; margin: 2rem 0;">
+    <h2 style="font-size: 3.5rem; margin-bottom: 1rem;">Добро пожаловать в ChessMaster</h2>
+    <p style="font-size: 1.2rem; margin-bottom: 2rem; opacity: 0.9;">Играйте в шахматы, повышайте рейтинг и получайте достижения!</p>
+    
+    {% if not session.user %}
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <a href="{{ url_for('register') }}" class="btn">
+                <i class="fas fa-user-plus"></i> Начать Игру
+            </a>
+            <a href="{{ url_for('login') }}" class="btn" style="background: linear-gradient(45deg, #3498db, #2980b9);">
+                <i class="fas fa-sign-in-alt"></i> Войти
+            </a>
+        </div>
+    {% else %}
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <a href="{{ url_for('play') }}" class="btn">
+                <i class="fas fa-chess-board"></i> Начать Новую Игру
+            </a>
+            <a href="{{ url_for('dashboard') }}" class="btn" style="background: linear-gradient(45deg, #3498db, #2980b9);">
+                <i class="fas fa-chart-line"></i> Мой Профиль
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<div class="features" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 4rem;">
+    <div class="feature-card" style="background: rgba(255, 255, 255, 0.1); padding: 2rem; border-radius: 20px; text-align: center; backdrop-filter: blur(10px);">
+        <i class="fas fa-chess-king" style="font-size: 3rem; margin-bottom: 1rem; color: #f39c12;"></i>
+        <h3>Рейтинговая Система</h3>
+        <p>Повышайте свой рейтинг, побеждая соперников</p>
+    </div>
+    
+    <div class="feature-card" style="background: rgba(255, 255, 255, 0.1); padding: 2rem; border-radius: 20px; text-align: center; backdrop-filter: blur(10px);">
+        <i class="fas fa-trophy" style="font-size: 3rem; margin-bottom: 1rem; color: #e74c3c;"></i>
+        <h3>Достижения</h3>
+        <p>Получайте уникальные достижения за ваши победы</p>
+    </div>
+    
+    <div class="feature-card" style="background: rgba(255, 255, 255, 0.1); padding: 2rem; border-radius: 20px; text-align: center; backdrop-filter: blur(10px);">
+        <i class="fas fa-users" style="font-size: 3rem; margin-bottom: 1rem; color: #3498db;"></i>
+        <h3>Сообщество</h3>
+        <p>Играйте с игроками со всего мира</p>
+    </div>
+</div>
+{% endblock %}
